@@ -1,0 +1,41 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "ct-timeline",
+  "title": "CT",
+  "version": "1.0.0",
+  "description": "Raycast command to show latest tweets from a Bird list timeline",
+  "icon": "icon.png",
+  "author": "thomas",
+  "categories": [
+    "News"
+  ],
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "ct",
+      "title": "Ct",
+      "description": "Show latest tweets from the configured list",
+      "mode": "view",
+      "icon": "icon.png",
+      "keywords": [
+        "ct"
+      ]
+    }
+  ],
+  "scripts": {
+    "build": "ray build -e dist",
+    "dev": "ray develop",
+    "lint": "ray lint"
+  },
+  "dependencies": {
+    "@raycast/api": "^1.78.0",
+    "react": "^19.1.0"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^1.0.8",
+    "@types/node": "^20.17.24",
+    "@types/react": "^19.1.8",
+    "eslint": "^8.57.1",
+    "typescript": "^5.8.2"
+  }
+}

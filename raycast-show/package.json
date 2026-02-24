@@ -1,0 +1,136 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "raycast-show",
+  "title": "Show",
+  "icon": "icon.png",
+  "description": "Search TMDB, resolve Torrentio + Real-Debrid, and launch VLC/mpv.",
+  "author": "thomas",
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "show",
+      "title": "Show",
+      "description": "Search a movie or TV show and play it with VLC/mpv",
+      "mode": "view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "tmdbApiKey",
+      "type": "password",
+      "required": false,
+      "title": "TMDB API Key",
+      "description": "Optional override. Falls back to TMDB_API_KEY from .env."
+    },
+    {
+      "name": "realDebridToken",
+      "type": "password",
+      "required": false,
+      "title": "Real-Debrid Token",
+      "description": "Optional override. Falls back to REAL_DEBRID_TOKEN from .env."
+    },
+    {
+      "name": "torrentioBaseUrl",
+      "type": "textfield",
+      "required": false,
+      "title": "Torrentio Base URL",
+      "description": "Optional override. Falls back to TORRENTIO_BASE_URL from .env."
+    },
+    {
+      "name": "playerBinary",
+      "type": "textfield",
+      "required": false,
+      "title": "Player Binary",
+      "description": "Executable name/path, e.g. vlc, mpv, /Applications/VLC.app/Contents/MacOS/VLC."
+    },
+    {
+      "name": "mpvBinary",
+      "type": "textfield",
+      "required": false,
+      "title": "Legacy MPV Binary",
+      "description": "Backward compatibility. Prefer Player Binary instead."
+    },
+    {
+      "name": "downloadDirectory",
+      "type": "textfield",
+      "required": false,
+      "title": "Download Directory",
+      "description": "Directory for downloads. Defaults to ~/Downloads."
+    },
+    {
+      "name": "ffmpegBinary",
+      "type": "textfield",
+      "required": false,
+      "title": "FFmpeg Binary",
+      "description": "Executable name/path for ffmpeg used by MP4 conversion downloads."
+    },
+    {
+      "name": "preferredQuality",
+      "type": "dropdown",
+      "required": false,
+      "title": "Preferred Quality",
+      "description": "Preferred source quality for ranking.",
+      "default": "auto",
+      "data": [
+        {
+          "title": "Auto",
+          "value": "auto"
+        },
+        {
+          "title": "2160p",
+          "value": "2160p"
+        },
+        {
+          "title": "1080p",
+          "value": "1080p"
+        },
+        {
+          "title": "720p",
+          "value": "720p"
+        }
+      ]
+    },
+    {
+      "name": "minSeeders",
+      "type": "textfield",
+      "required": false,
+      "title": "Minimum Seeders",
+      "description": "Optional numeric filter."
+    },
+    {
+      "name": "enableResolvedCache",
+      "type": "checkbox",
+      "required": false,
+      "label": "Enable cache",
+      "title": "Enable Resolved Cache",
+      "description": "Reuse previously resolved links when available.",
+      "default": true
+    },
+    {
+      "name": "clearResolvedCacheOnLaunch",
+      "type": "checkbox",
+      "required": false,
+      "label": "Clear cache on launch",
+      "title": "Clear Resolved Cache on Launch",
+      "description": "Delete all cached resolved links when this command starts.",
+      "default": false
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^1.104.6"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.1.1",
+    "@types/node": "^24.3.0",
+    "@types/react": "^19.1.12",
+    "eslint": "^9.39.2",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "build": "ray build -e dist",
+    "dev": "ray develop",
+    "lint": "ray lint",
+    "fix-lint": "ray lint --fix"
+  }
+}

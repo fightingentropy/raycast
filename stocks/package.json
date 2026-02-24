@@ -1,0 +1,51 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "stocks",
+  "title": "Stocks",
+  "icon": "icon.png",
+  "description": "Show stock prices from Stooq in a vertical list.",
+  "author": "thomas",
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "stocks",
+      "title": "Stocks",
+      "description": "Show stock prices from Stooq in a vertical list",
+      "mode": "view",
+      "arguments": [
+        {
+          "name": "tickers",
+          "type": "text",
+          "placeholder": "$",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "preferences": [
+    {
+      "name": "defaultTickers",
+      "type": "textfield",
+      "required": false,
+      "title": "Default Stock Tickers",
+      "description": "Comma-separated tickers used when command argument is empty."
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^1.104.6"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.1.1",
+    "@types/node": "^24.3.0",
+    "@types/react": "^19.1.12",
+    "eslint": "^9.39.2",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "build": "ray build -e dist",
+    "dev": "ray develop",
+    "lint": "ray lint",
+    "fix-lint": "ray lint --fix"
+  }
+}
