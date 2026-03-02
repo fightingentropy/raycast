@@ -1,0 +1,107 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "key-points",
+  "title": "Key Points",
+  "description": "Summarize X posts, YouTube videos, and articles with Codex",
+  "icon": "command-icon.png",
+  "author": "thomas",
+  "platforms": [
+    "macOS"
+  ],
+  "categories": [
+    "Productivity",
+    "Developer Tools"
+  ],
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "kp-summarize",
+      "title": "KP",
+      "description": "Summarize an X post, YouTube video, or article URL with Codex",
+      "mode": "view",
+      "arguments": [
+        {
+          "name": "url",
+          "type": "text",
+          "placeholder": "YouTube, X, or article URL",
+          "required": true
+        }
+      ],
+      "keywords": [
+        "kp",
+        "summary",
+        "x",
+        "youtube",
+        "article"
+      ],
+      "preferences": [
+        {
+          "name": "codexModel",
+          "type": "textfield",
+          "required": false,
+          "title": "Codex Model",
+          "description": "Model name for Codex backend requests",
+          "default": "gpt-5.2-codex"
+        },
+        {
+          "name": "codexUrl",
+          "type": "textfield",
+          "required": false,
+          "title": "Codex URL",
+          "description": "Codex responses endpoint",
+          "default": "https://chatgpt.com/backend-api/codex/responses"
+        },
+        {
+          "name": "codexAuthFile",
+          "type": "textfield",
+          "required": false,
+          "title": "Codex Auth File",
+          "description": "Path to auth.json containing access_token",
+          "default": "~/.codex/auth.json"
+        },
+        {
+          "name": "birdCommand",
+          "type": "textfield",
+          "required": false,
+          "title": "Bird Command Template",
+          "description": "Optional shell command with {url} placeholder, e.g. bird x post \"{url}\" --json"
+        },
+        {
+          "name": "maxSourceChars",
+          "type": "textfield",
+          "required": false,
+          "title": "Max Source Characters",
+          "description": "Input text truncation limit before sending to Codex",
+          "default": "20000"
+        },
+        {
+          "name": "apifyApiToken",
+          "type": "password",
+          "required": false,
+          "title": "Apify API Token",
+          "description": "Optional token for last-resort YouTube transcript fallback"
+        }
+      ]
+    }
+  ],
+  "dependencies": {
+    "@danielxceron/youtube-transcript": "^1.2.6",
+    "@raycast/api": "^1.104.7",
+    "node-html-parser": "^7.0.2",
+    "youtube-caption-extractor": "^1.9.1"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.1.1",
+    "@types/node": "^24.6.0",
+    "@types/react": "^19.1.13",
+    "eslint": "^9.39.1",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2"
+  },
+  "scripts": {
+    "build": "ray build -e dist",
+    "dev": "ray develop",
+    "lint": "ray lint",
+    "fix-lint": "ray lint --fix"
+  }
+}
