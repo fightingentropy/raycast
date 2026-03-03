@@ -19,10 +19,9 @@ const DEFAULT_TICKERS = [
   "GOOGL",
   "AMZN",
   "TSLA",
-  "VIX",
   "HOOD",
   "SNDK",
-  "USAR",
+  "VIX",
 ];
 const REFRESH_INTERVAL_MS = 60_000;
 const STOOQ_RETRY_COUNT = 2;

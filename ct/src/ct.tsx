@@ -15,6 +15,12 @@ type BirdTweet = {
   text: string;
   url?: string;
   mediaUrls: string[];
+  quotedTweet?: {
+    author?: string;
+    text: string;
+    url?: string;
+    mediaUrls: string[];
+  };
   author: {
     username: string;
   };
@@ -64,17 +70,37 @@ function parseBirdTimelinePlain(raw: string): BirdTweet[] {
   let textLines: string[] = [];
   let currentUrl: string | undefined;
   let currentMediaUrls: string[] = [];
+  let collectingQuotedTweet = false;
+  let currentQuotedAuthor: string | undefined;
+  let currentQuotedTextLines: string[] = [];
+  let currentQuotedUrl: string | undefined;
+  let currentQuotedMediaUrls: string[] = [];
   let idCounter = 0;
 
   const flush = () => {
     if (!currentAuthor) return;
     const text = textLines.join("\n").trim();
     if (!text) return;
+    const quotedText = currentQuotedTextLines.join("\n").trim();
+    const hasQuotedTweet =
+      Boolean(currentQuotedAuthor) ||
+      Boolean(quotedText) ||
+      Boolean(currentQuotedUrl) ||
+      currentQuotedMediaUrls.length > 0;
+
     tweets.push({
       id: `plain-${idCounter++}`,
       text,
       url: currentUrl,
       mediaUrls: currentMediaUrls,
+      quotedTweet: hasQuotedTweet
+        ? {
+            author: currentQuotedAuthor,
+            text: quotedText,
+            url: currentQuotedUrl,
+            mediaUrls: currentQuotedMediaUrls,
+          }
+        : undefined,
       author: { username: currentAuthor.replace(/^@/, "") },
     });
   };
@@ -91,6 +117,50 @@ function parseBirdTimelinePlain(raw: string): BirdTweet[] {
       textLines = [];
       currentUrl = undefined;
       currentMediaUrls = [];
+      collectingQuotedTweet = false;
+      currentQuotedAuthor = undefined;
+      currentQuotedTextLines = [];
+      currentQuotedUrl = undefined;
+      currentQuotedMediaUrls = [];
+      continue;
+    }
+
+    const quoteHeaderMatch = trimmed.match(
+      /^┌─\s*QT(?:\s+(@[A-Za-z0-9_]+))?:?/i,
+    );
+    if (quoteHeaderMatch) {
+      collectingQuotedTweet = true;
+      currentQuotedAuthor = quoteHeaderMatch[1]?.replace(/^@/, "");
+      currentQuotedTextLines = [];
+      currentQuotedUrl = undefined;
+      currentQuotedMediaUrls = [];
+      continue;
+    }
+
+    if (collectingQuotedTweet) {
+      if (trimmed.startsWith("│")) {
+        const quotedLine = trimmed.replace(/^│\s?/, "").trim();
+        if (!quotedLine) continue;
+        if (quotedLine.startsWith("🖼")) {
+          const maybeMediaUrl = quotedLine.replace(/^🖼️?\s*/, "").trim();
+          if (maybeMediaUrl.startsWith("http")) {
+            currentQuotedMediaUrls.push(maybeMediaUrl);
+          }
+          continue;
+        }
+
+        currentQuotedTextLines.push(quotedLine);
+        continue;
+      }
+
+      if (trimmed.startsWith("└")) {
+        const maybeQuoteUrl = trimmed.replace(/^└─\s*/, "").trim();
+        if (maybeQuoteUrl.startsWith("http")) {
+          currentQuotedUrl = maybeQuoteUrl;
+        }
+        collectingQuotedTweet = false;
+      }
+
       continue;
     }
 
@@ -103,12 +173,6 @@ function parseBirdTimelinePlain(raw: string): BirdTweet[] {
       }
       continue;
     }
-    if (
-      trimmed.startsWith("┌") ||
-      trimmed.startsWith("│") ||
-      trimmed.startsWith("└")
-    )
-      continue;
     if (trimmed.startsWith("🖼")) {
       const maybeMediaUrl = trimmed.replace(/^🖼️?\s*/, "").trim();
       if (maybeMediaUrl.startsWith("http")) {
@@ -123,6 +187,11 @@ function parseBirdTimelinePlain(raw: string): BirdTweet[] {
       textLines = [];
       currentUrl = undefined;
       currentMediaUrls = [];
+      collectingQuotedTweet = false;
+      currentQuotedAuthor = undefined;
+      currentQuotedTextLines = [];
+      currentQuotedUrl = undefined;
+      currentQuotedMediaUrls = [];
       continue;
     }
 
@@ -253,7 +322,16 @@ export default function Command() {
         const username = tweet.author?.username
           ? `@${tweet.author.username}`
           : "@unknown";
-        const output = `${text}\n${username}`;
+        const quotedAuthor = tweet.quotedTweet?.author
+          ? `@${tweet.quotedTweet.author}`
+          : "@unknown";
+        const quotedText =
+          tweet.quotedTweet && tweet.quotedTweet.text.trim().length > 0
+            ? tweet.quotedTweet.text.trim()
+            : "(no text)";
+        const output = tweet.quotedTweet
+          ? `${text}\n${username}\n\nQuoted Tweet (${quotedAuthor})\n${quotedText}`
+          : `${text}\n${username}`;
         const firstLine = text.split(/\r?\n/)[0] ?? text;
 
         return (
@@ -262,7 +340,7 @@ export default function Command() {
             title={`${firstLine} ${username}`}
             detail={
               <List.Item.Detail
-                markdown={`${username}\n\n${escapeMarkdown(text)}${renderImages(tweet.mediaUrls)}${tweet.url ? `\n\n[Open Tweet](${tweet.url})` : ""}`}
+                markdown={`${username}\n\n${escapeMarkdown(text)}${renderImages(tweet.mediaUrls)}${tweet.url ? `\n\n[Open Tweet](${tweet.url})` : ""}${renderQuotedTweet(tweet.quotedTweet)}`}
               />
             }
             actions={
@@ -288,4 +366,21 @@ function escapeMarkdown(text: string): string {
 function renderImages(urls: string[]): string {
   if (urls.length === 0) return "";
   return `\n\n${urls.map((url) => `![](${url})`).join("\n\n")}`;
+}
+
+function renderQuotedTweet(quotedTweet?: {
+  author?: string;
+  text: string;
+  url?: string;
+  mediaUrls: string[];
+}): string {
+  if (!quotedTweet) return "";
+
+  const quotedUsername = quotedTweet.author
+    ? `@${quotedTweet.author}`
+    : "@unknown";
+  const quotedText =
+    quotedTweet.text.trim().length > 0 ? quotedTweet.text.trim() : "(no text)";
+
+  return `\n\n---\n\n**Quoted Tweet ${quotedUsername}**\n\n${escapeMarkdown(quotedText)}${renderImages(quotedTweet.mediaUrls)}`;
 }
