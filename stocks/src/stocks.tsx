@@ -10,6 +10,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 const STOOQ_QUOTE_ENDPOINT = "https://stooq.com/q/l/";
+const STOOQ_HISTORY_ENDPOINT = "https://stooq.com/q/d/l/";
 const CBOE_DELAYED_QUOTES_ENDPOINT =
   "https://cdn.cboe.com/api/global/delayed_quotes/quotes";
 const DEFAULT_TICKERS = [
@@ -139,6 +140,28 @@ function parseStooqCsvQuote(text: string): {
   };
 }
 
+function parseStooqHistoricalPreviousClose(text: string): number | undefined {
+  const lines = text
+    .trim()
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
+  if (lines.length < 3) return undefined;
+
+  for (let index = lines.length - 2; index >= 1; index -= 1) {
+    const fields = lines[index].split(",");
+    if (fields.length < 5) continue;
+
+    const close = Number(fields[4]);
+    if (Number.isFinite(close) && close > 0) {
+      return close;
+    }
+  }
+
+  return undefined;
+}
+
 async function fetchTickerQuote(ticker: string): Promise<StockRow> {
   if (isVixTicker(ticker)) {
     const url = `${CBOE_DELAYED_QUOTES_ENDPOINT}/_VIX.json`;
@@ -166,20 +189,29 @@ async function fetchTickerQuote(ticker: string): Promise<StockRow> {
   const stooqSymbol = mapTickerToStooqSymbol(ticker);
   const quoteUrlSymbol = stooqSymbol;
   const url = `${STOOQ_QUOTE_ENDPOINT}?s=${encodeURIComponent(stooqSymbol)}&i=d`;
+  const historyUrl = `${STOOQ_HISTORY_ENDPOINT}?s=${encodeURIComponent(stooqSymbol)}&i=d`;
 
   let lastErrorMessage = "No quote data returned by Stooq for this symbol.";
   for (let attempt = 0; attempt <= STOOQ_RETRY_COUNT; attempt += 1) {
     try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        lastErrorMessage = `HTTP ${response.status}`;
+      const [quoteResponse, historyResponse] = await Promise.all([
+        fetch(url),
+        fetch(historyUrl),
+      ]);
+
+      if (!quoteResponse.ok) {
+        lastErrorMessage = `HTTP ${quoteResponse.status}`;
       } else {
-        const payload = await response.text();
+        const [payload, historyPayload] = await Promise.all([
+          quoteResponse.text(),
+          historyResponse.ok ? historyResponse.text() : Promise.resolve(""),
+        ]);
         const parsed = parseStooqCsvQuote(payload);
         if (parsed.hasData && parsed.close) {
+          const previousClose = parseStooqHistoricalPreviousClose(historyPayload);
           const changePct =
-            typeof parsed.open === "number" && parsed.open > 0
-              ? ((parsed.close - parsed.open) / parsed.open) * 100
+            typeof previousClose === "number" && previousClose > 0
+              ? ((parsed.close - previousClose) / previousClose) * 100
               : undefined;
           const change = formatChange(changePct);
 
